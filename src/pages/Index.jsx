@@ -7,6 +7,7 @@ import Papa from 'papaparse';
 const Index = () => {
   const [csvData, setCsvData] = useState([]);
   const [headers, setHeaders] = useState([]);
+  const [editingRow, setEditingRow] = useState(null);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -34,6 +35,32 @@ const Index = () => {
     }
   };
 
+  const handleEdit = (rowIndex) => {
+    setEditingRow(rowIndex);
+  };
+
+  const handleSave = (rowIndex) => {
+    setEditingRow(null);
+  };
+
+  const handleDelete = (rowIndex) => {
+    const newData = [...csvData];
+    newData.splice(rowIndex, 1);
+    setCsvData(newData);
+  };
+
+  const handleAddRow = () => {
+    const newRow = new Array(headers.length).fill('');
+    setCsvData([...csvData, newRow]);
+    setEditingRow(csvData.length);
+  };
+
+  const handleCellChange = (rowIndex, cellIndex, value) => {
+    const newData = [...csvData];
+    newData[rowIndex][cellIndex] = value;
+    setCsvData(newData);
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">CSV Management Tool</h1>
@@ -50,18 +77,40 @@ const Index = () => {
                 {headers.map((header, index) => (
                   <TableHead key={index}>{header}</TableHead>
                 ))}
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {csvData.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
                   {row.map((cell, cellIndex) => (
-                    <TableCell key={cellIndex}>{cell}</TableCell>
+                    <TableCell key={cellIndex}>
+                      {editingRow === rowIndex ? (
+                        <Input
+                          value={cell}
+                          onChange={(e) => handleCellChange(rowIndex, cellIndex, e.target.value)}
+                        />
+                      ) : (
+                        cell
+                      )}
+                    </TableCell>
                   ))}
+                  <TableCell>
+                    {editingRow === rowIndex ? (
+                      <Button onClick={() => handleSave(rowIndex)}>Save</Button>
+                    ) : (
+                      <Button onClick={() => handleEdit(rowIndex)}>Edit</Button>
+                    )}
+                    <Button onClick={() => handleDelete(rowIndex)} className="ml-2">Delete</Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+
+          <div className="mb-4">
+            <Button onClick={handleAddRow}>Add Row</Button>
+          </div>
 
           <Button onClick={handleDownload}>Download CSV</Button>
         </>
